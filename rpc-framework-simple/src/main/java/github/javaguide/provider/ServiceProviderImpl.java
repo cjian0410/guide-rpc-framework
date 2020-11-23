@@ -1,11 +1,11 @@
 package github.javaguide.provider;
 
 import github.javaguide.entity.RpcServiceProperties;
-import github.javaguide.enumeration.RpcErrorMessage;
+import github.javaguide.enums.RpcErrorMessageEnum;
 import github.javaguide.exception.RpcException;
 import github.javaguide.extension.ExtensionLoader;
 import github.javaguide.registry.ServiceRegistry;
-import github.javaguide.remoting.transport.netty.server.NettyServer;
+import github.javaguide.remoting.transport.netty.server.NettyRpcServer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -52,7 +52,7 @@ public class ServiceProviderImpl implements ServiceProvider {
     public Object getService(RpcServiceProperties rpcServiceProperties) {
         Object service = serviceMap.get(rpcServiceProperties.toRpcServiceName());
         if (null == service) {
-            throw new RpcException(RpcErrorMessage.SERVICE_CAN_NOT_BE_FOUND);
+            throw new RpcException(RpcErrorMessageEnum.SERVICE_CAN_NOT_BE_FOUND);
         }
         return service;
     }
@@ -70,7 +70,7 @@ public class ServiceProviderImpl implements ServiceProvider {
             String serviceName = serviceRelatedInterface.getCanonicalName();
             rpcServiceProperties.setServiceName(serviceName);
             this.addService(service, serviceRelatedInterface, rpcServiceProperties);
-            serviceRegistry.registerService(rpcServiceProperties.toRpcServiceName(), new InetSocketAddress(host, NettyServer.PORT));
+            serviceRegistry.registerService(rpcServiceProperties.toRpcServiceName(), new InetSocketAddress(host, NettyRpcServer.PORT));
         } catch (UnknownHostException e) {
             log.error("occur exception when getHostAddress", e);
         }

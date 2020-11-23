@@ -1,9 +1,9 @@
 package github.javaguide.registry.zk;
 
-import github.javaguide.enumeration.RpcErrorMessage;
+import github.javaguide.enums.RpcErrorMessageEnum;
 import github.javaguide.exception.RpcException;
+import github.javaguide.extension.ExtensionLoader;
 import github.javaguide.loadbalance.LoadBalance;
-import github.javaguide.loadbalance.RandomLoadBalance;
 import github.javaguide.registry.ServiceDiscovery;
 import github.javaguide.registry.zk.util.CuratorUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -23,18 +23,18 @@ public class ZkServiceDiscovery implements ServiceDiscovery {
     private final LoadBalance loadBalance;
 
     public ZkServiceDiscovery() {
-        this.loadBalance = new RandomLoadBalance();
+        this.loadBalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension("loadBalance");
     }
 
     @Override
     public InetSocketAddress lookupService(String rpcServiceName) {
         CuratorFramework zkClient = CuratorUtils.getZkClient();
         List<String> serviceUrlList = CuratorUtils.getChildrenNodes(zkClient, rpcServiceName);
-        if (serviceUrlList.size() == 0) {
-            throw new RpcException(RpcErrorMessage.SERVICE_CAN_NOT_BE_FOUND, rpcServiceName);
+        if (serviceUrlList == null || serviceUrlList.size() == 0) {
+            throw new RpcException(RpcErrorMessageEnum.SERVICE_CAN_NOT_BE_FOUND, rpcServiceName);
         }
         // load balancing
-        String targetServiceUrl = loadBalance.selectServiceAddress(serviceUrlList);
+        String targetServiceUrl = loadBalance.selectServiceAddress(serviceUrlList, rpcServiceName);
         log.info("Successfully found the service address:[{}]", targetServiceUrl);
         String[] socketAddressArray = targetServiceUrl.split(":");
         String host = socketAddressArray[0];
